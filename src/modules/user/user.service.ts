@@ -35,7 +35,6 @@ const getSingleUserFromDB = async (id : string) =>{
   const result = await pool.query(
       `
       SELECT * FROM users WHERE id=$1
-      console.log("🚀 ~ getSingleUserFromDB ~ $1:", $1)
       `,
       [id],
     );
