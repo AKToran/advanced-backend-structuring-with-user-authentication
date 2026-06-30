@@ -5,6 +5,12 @@ import bcrypt from "bcryptjs";
 const createUserInDB = async (payload: IUser) => {
   const { name, email, password, age, role } = payload;
 
+  const allowedRoles = ["admin", "agent", "user"];
+
+  if (role && !allowedRoles.includes(role)) {
+    throw new Error("Invalid role");
+  }
+
   // const salt = await bcrypt.genSalt(10);
   const hashPassword = await bcrypt.hash(password, 10);
 
@@ -24,31 +30,31 @@ const getAllUsersFromDB = async () => {
   const result = await pool.query(`
       SELECT * FROM USERS
   `);
-  
-  result.rows.map((row)=>{
+
+  result.rows.map((row) => {
     delete row.password;
-  })
+  });
   return result;
 };
 
-const getSingleUserFromDB = async (id : string) =>{
+const getSingleUserFromDB = async (id: string) => {
   const result = await pool.query(
-      `
+    `
       SELECT * FROM users WHERE id=$1
       `,
-      [id],
-    );
+    [id],
+  );
 
   // without optional chaining error:
   // "message": "Cannot convert undefined or null to object",
   delete result.rows[0]?.password;
   return result;
-}
+};
 
-const updateUserInDB = async (payload: Partial<IUser>, id: string) =>{
+const updateUserInDB = async (payload: Partial<IUser>, id: string) => {
   const { name, password, age, is_active } = payload;
   const result = await pool.query(
-      `
+    `
     UPDATE users 
     SET 
     name=COALESCE($1,name), 
@@ -58,25 +64,25 @@ const updateUserInDB = async (payload: Partial<IUser>, id: string) =>{
     WHERE id=$5 
     RETURNING *
     `,
-      [name, password, age, is_active, id],
-    );
-    return result;
-}
+    [name, password, age, is_active, id],
+  );
+  return result;
+};
 
-const deleteUserFromDB = async ( id: string)=>{
+const deleteUserFromDB = async (id: string) => {
   const result = await pool.query(
-      `
+    `
       DELETE FROM users WHERE id=$1
       `,
-      [id],
-    );
-    return result;
-}
+    [id],
+  );
+  return result;
+};
 
 export const userService = {
   createUserInDB,
   getAllUsersFromDB,
   getSingleUserFromDB,
   updateUserInDB,
-  deleteUserFromDB
+  deleteUserFromDB,
 };
